@@ -1,0 +1,67 @@
+---
+- name: Ansible Install Jenkins on Ubuntu18 Server
+  gather_facts: false
+  hosts: jenkins
+  become: true
+  tasks:
+
+    - name: Check Hostname
+      command: hostname
+      register: hname
+
+    - debug: msg="{{ hname.stdout }}"
+
+    - name: Update all packages to their latest version
+      apt:
+        name: "*"
+        state: latest
+
+    - name: download jenkins key
+      ansible.builtin.get_url:
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+        dest: /usr/share/keyrings/jenkins-keyring.asc
+
+    - name: Add Jenkins repo
+      ansible.builtin.apt_repository:
+        repo: deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/
+        state: present
+        filename: jenkins.list  
+
+    - name: Update all packages to their latest version
+      apt:
+        name: "*"
+        state: latest
+
+    - name: Install fontconfig
+      shell: apt install fontconfig -y    
+
+    - name: Install java
+      shell: apt install fontconfig openjdk-17-jre -y  
+
+    - name: Install the Jenkins
+      ansible.builtin.apt:
+        name: jenkins
+        state: present  
+
+    - name: Make sure a service unit is running
+      ansible.builtin.systemd:
+        state: started
+        name: jenkins
+        enabled: yes
+
+    - name: Wait for Jenkins to start up
+      wait_for:
+        port: 8080
+        delay: 10
+        timeout: 120
+        state: started
+
+    - name: Get Jenkins password
+      shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+      changed_when: false
+      register: result
+
+    - name: Password to "Unlock Jenkins"
+      debug:
+        var: result.stdout
+
