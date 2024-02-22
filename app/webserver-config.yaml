@@ -1,0 +1,60 @@
+---
+- name: Config Webservers
+  hosts: webservers
+  become: true
+  tasks:
+    - name: Update package lists
+      dnf:
+        name: '*'
+        state: latest
+
+    - name: Install Node.js and npm
+      dnf:
+        name: nodejs
+        state: present
+
+    - name: Create directory for application
+      file:
+        path: /var/www/html/myapp
+        state: directory
+        mode: 0755
+
+    - name: Copy JavaScript files
+      copy:
+        src: hello_world.js
+        dest: /var/www/html/myapp
+        mode: 0644
+
+    - name: Install Node.js dependencies
+      npm:
+        path: /var/www/html/myapp
+        name: express
+        state: present
+    - name: Install pm2 globally
+      npm:
+        name: pm2
+        global: yes
+
+    - name: Start Node.js application with pm2
+      command: pm2 start /var/www/html/myapp/hello_world.js -f
+      become_user: ec2-user
+
+    #- name: Start Node.js application
+     # command: nohup node /var/www/html/myapp/hello_world.js &
+     # become: true
+
+    #- name: Start Node.js application
+     # systemd:
+     #   name: hello_world
+     #   enabled: yes
+     #   state: started
+
+    - name: Test "Hello World" page
+      uri:
+        url: http://localhost:3000
+       # return_code: 200
+       # msg: "Hello World page is accessible!"
+
+    
+
+
