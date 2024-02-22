@@ -1,0 +1,3 @@
+[jenkins]
+ubuntu@54.159.192.2 ansible_ssh_private_key_file=~/.ssh/ec2_key_jenkins.pem
+
