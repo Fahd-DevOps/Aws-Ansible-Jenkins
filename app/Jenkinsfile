@@ -4,31 +4,29 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/Fahd-DevOps/Aws-Ansible-Jenkins.git'
+                sh 'echo "Checkout code from GitHub repository..."'
+                git branch: 'main', url: 'https://github.com/Fahd-DevOps/Aws-Ansible-Jenkins'
             }
         }
 
-        stage('Run Ansible Playbook') {
+        stage('Build Using Ansible') {
             steps {
-                // Execute ansible playbook
-                withCredentials([sshUserPrivateKey(credentialsId: 'ansible-ssh-key-id', keyFileVariable: 'SSH_KEY')]) {
-                    sh '''
-                        chmod 600 $SSH_KEY
-                        ansible-playbook -i hosts.yaml webserver-config.yaml
-                    '''
-                }
+                // Example build steps
+                sh 'echo "Building the project..."'
+                ansiblePlaybook credentialsId: 'ansible-ssh-key-id', disableHostKeyChecking: true, installation: 'ansible2', inventory: 'app/hosts.yaml', playbook: 'app/webserver-config.yaml', vaultTmpPath: ''
             }
         }
     }
 
     post {
         success {
-            // Notify success
-            echo 'Ansible playbook executed successfully!'
+            // Notification for successful build
+            echo 'Build successful! Deploying...'
         }
         failure {
-            // Notify failure
-            echo 'Ansible playbook execution failed!'
+            // Notification for failed build
+            echo 'Build failed!'
+            // Add error handling or notification steps
         }
     }
 }
